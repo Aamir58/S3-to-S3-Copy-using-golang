@@ -39,7 +39,6 @@ func receive_s3_chunks(svc *s3.S3, bucket_name string, chan_s3_chunks chan *s3.L
 		return
 	}
 
-	//fmt.Printf("%s done\n", bucket_name)
 }
 
 func extract_contents(chan_s3_chunks chan *s3.ListObjectsOutput, output_chan chan *s3.Object) {
@@ -60,13 +59,13 @@ func extract_contents(chan_s3_chunks chan *s3.ListObjectsOutput, output_chan cha
 	close(output_chan)
 }
 
-func Copy_S3_to_S3(svc *s3.S3, bucket_name_src, bucket_name_dest string, s3_contents_4_upload chan *s3.Object, worker_id int) {
+func Copy_S3_to_S3(svc *s3.S3, bucket_name_src, bucket_name_dest string, s3_contents chan *s3.Object, worker_id int) {
 	defer wg_upload.Done()
 	var elem *s3.Object
 	var ok bool
 
 	for {
-		elem, ok = <-s3_contents_4_upload
+		elem, ok = <-s3_contents
 
 		if ok && elem != nil {
 
@@ -117,6 +116,7 @@ func main() {
 	for i := 0; i < CHAN_UPLOAD_WORKER; i++ {
 		fmt.Printf("Starting Worker %v\n", i)
 		wg_upload.Add(1)
+		//Copy func
 		go Copy_S3_to_S3(svc, *arg_bucket_src, *arg_bucket_dest, s3_contents_src, i)
 
 	}
